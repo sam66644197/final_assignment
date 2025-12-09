@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AirQuality 查詢介面</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
+    label { display:block; margin-top:10px; }
+    input[type=text] { width:300px; }
+    table { border-collapse: collapse; margin-top:10px; width:100%; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:left; }
+    .row { margin-top:10px; }
+  </style>
+</head>
+<body>
+  <h1>AirQuality 查詢介面</h1>
+  <div>
+    <label>欄位 (逗號分隔，例如 sitename,aqi,pm2.5)</label>
+    <input id="cols" type="text" placeholder="sitename,aqi,pm2.5" />
+
+    <label>限制筆數</label>
+    <input id="limit" type="text" value="10" />
+
+    <button id="queryBtn">查詢資料</button>
+  </div>
+
+  <div class="row">
+    <h2>結果</h2>
+    <div id="result"></div>
+  </div>
+
+  <hr />
+  <div>
+    <h2>以 Id 查詢</h2>
+    <label>Id</label>
+    <input id="idInput" type="text" />
+    <button id="idQueryBtn">查詢 Id</button>
+    <div id="idResult"></div>
+  </div>
+
+  <script>
+    async function query() {
+      const cols = document.getElementById('cols').value;
+      const limit = document.getElementById('limit').value;
+      const q = new URLSearchParams();
+      if (cols) q.set('cols', cols);
+      if (limit) q.set('limit', limit);
+
+      const res = await fetch('/records?' + q.toString());
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '';
+
+      if (!res.ok) {
+        const err = await res.json();
+        resultDiv.textContent = '錯誤: ' + JSON.stringify(err);
+        return;
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        resultDiv.textContent = '沒有資料';
+        return;
+      }
+
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      const colsList = Object.keys(data[0]);
+      colsList.forEach(c => {
+        const th = document.createElement('th'); th.textContent = c; headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        colsList.forEach(c => {
+          const td = document.createElement('td'); td.textContent = (row[c] === null ? '<null>' : row[c]); tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      resultDiv.appendChild(table);
+    }
+
+    async function queryById() {
+      const id = document.getElementById('idInput').value;
+      const idResult = document.getElementById('idResult');
+      idResult.innerHTML = '';
+      if (!id) { idResult.textContent = '請輸入 Id'; return; }
+      const res = await fetch('/records/' + encodeURIComponent(id));
+      if (res.status === 404) { idResult.textContent = '找不到資料'; return; }
+      if (!res.ok) { idResult.textContent = '發生錯誤'; return; }
+      const data = await res.json();
+      idResult.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+    }
+
+    document.getElementById('queryBtn').addEventListener('click', query);
+    document.getElementById('idQueryBtn').addEventListener('click', queryById);
+  </script>
+</body>
+</html>
