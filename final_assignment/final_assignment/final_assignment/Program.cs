@@ -299,4 +299,3 @@ VALUES (@Sitename,@County,@Aqi,@Pollutant,@Status,@So2,@Co,@O3,@O3_8hr,@PM10,@PM
         }
     }
 }
-
