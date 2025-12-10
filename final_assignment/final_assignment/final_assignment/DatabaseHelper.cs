@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.Collections.ObjectModel;
 using Microsoft.Data.SqlClient;
 
 namespace midterm_assignment
@@ -41,6 +42,12 @@ namespace midterm_assignment
             { "latitude", "Latitude" },
             { "siteid", "SiteId" }
         };
+
+        // 對外提供可查詢欄位（不允許修改）
+        public static IReadOnlyDictionary<string, string> GetAllowedColumns()
+        {
+            return new ReadOnlyDictionary<string, string>(ColumnMap);
+        }
 
         public static List<Dictionary<string, object>> GetTopRecordsColumns(string[] requestedColumns, int limit = 10)
         {

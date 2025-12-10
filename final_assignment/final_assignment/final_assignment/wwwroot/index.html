@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AirQuality ¬d¸ß¤¶­±</title>
+  <title>AirQuality ï¿½dï¿½ß¤ï¿½ï¿½ï¿½</title>
   <style>
     body { font-family: Arial, Helvetica, sans-serif; margin: 20px; }
     label { display:block; margin-top:10px; }
@@ -14,28 +14,28 @@
   </style>
 </head>
 <body>
-  <h1>AirQuality ¬d¸ß¤¶­±</h1>
+  <h1>AirQuality ï¿½dï¿½ß¤ï¿½ï¿½ï¿½</h1>
   <div>
-    <label>Äæ¦ì (³r¸¹¤À¹j¡A¨Ò¦p sitename,aqi,pm2.5)</label>
+    <label>ï¿½ï¿½ï¿½ (ï¿½rï¿½ï¿½ï¿½ï¿½ï¿½jï¿½Aï¿½Ò¦p sitename,aqi,pm2.5)</label>
     <input id="cols" type="text" placeholder="sitename,aqi,pm2.5" />
 
-    <label>­­¨îµ§¼Æ</label>
+    <label>ï¿½ï¿½ï¿½îµ§ï¿½ï¿½</label>
     <input id="limit" type="text" value="10" />
 
-    <button id="queryBtn">¬d¸ß¸ê®Æ</button>
+    <button id="queryBtn">ï¿½dï¿½ß¸ï¿½ï¿½</button>
   </div>
 
   <div class="row">
-    <h2>µ²ªG</h2>
+    <h2>ï¿½ï¿½ï¿½G</h2>
     <div id="result"></div>
   </div>
 
   <hr />
   <div>
-    <h2>¥H Id ¬d¸ß</h2>
+    <h2>ï¿½H Id ï¿½dï¿½ï¿½</h2>
     <label>Id</label>
     <input id="idInput" type="text" />
-    <button id="idQueryBtn">¬d¸ß Id</button>
+    <button id="idQueryBtn">ï¿½dï¿½ï¿½ Id</button>
     <div id="idResult"></div>
   </div>
 
@@ -53,13 +53,13 @@
 
       if (!res.ok) {
         const err = await res.json();
-        resultDiv.textContent = '¿ù»~: ' + JSON.stringify(err);
+        resultDiv.textContent = 'ï¿½ï¿½ï¿½~: ' + JSON.stringify(err);
         return;
       }
 
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
-        resultDiv.textContent = '¨S¦³¸ê®Æ';
+        resultDiv.textContent = 'ï¿½Sï¿½ï¿½ï¿½ï¿½ï¿½';
         return;
       }
 
@@ -89,10 +89,10 @@
       const id = document.getElementById('idInput').value;
       const idResult = document.getElementById('idResult');
       idResult.innerHTML = '';
-      if (!id) { idResult.textContent = '½Ð¿é¤J Id'; return; }
+      if (!id) { idResult.textContent = 'ï¿½Ð¿ï¿½J Id'; return; }
       const res = await fetch('/records/' + encodeURIComponent(id));
-      if (res.status === 404) { idResult.textContent = '§ä¤£¨ì¸ê®Æ'; return; }
-      if (!res.ok) { idResult.textContent = 'µo¥Í¿ù»~'; return; }
+      if (res.status === 404) { idResult.textContent = 'ï¿½ä¤£ï¿½ï¿½ï¿½ï¿½'; return; }
+      if (!res.ok) { idResult.textContent = 'ï¿½oï¿½Í¿ï¿½ï¿½~'; return; }
       const data = await res.json();
       idResult.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
     }

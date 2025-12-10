@@ -1,0 +1,70 @@
+﻿@using midterm_assignment
+@{
+    ViewData["Title"] = "AirQuality 查詢";
+    var cols = ViewData["Cols"] as string ?? "";
+    var limit = (int)(ViewData["Limit"] ?? 10);
+    var rows = ViewData["Rows"] as List<Dictionary<string, object>>;
+    var record = ViewData["Record"];
+    var error = ViewData["Error"] as string;
+
+    var allowed = DatabaseHelper.GetAllowedColumns();
+}
+
+<h1>AirQuality 查詢</h1>
+
+<div>
+    <strong>可查詢的欄位：</strong>
+    <p>@string.Join(", ", allowed.Keys)</p>
+    <details>
+        <summary>欄位對應 (輸入名稱 → 資料庫欄名)</summary>
+        <ul>
+            @foreach (var kv in allowed)
+            {
+                <li><code>@kv.Key</code> → <code>@kv.Value</code></li>
+            }
+        </ul>
+    </details>
+</div>
+
+<form method="get" asp-controller="Home" asp-action="Index">
+    <label>欄位 (逗號分隔，例如 sitename,aqi,pm2.5)</label>
+    <input name="cols" value="@cols" />
+    <label>限制筆數</label>
+    <input name="limit" value="@limit" />
+    <button type="submit">查詢</button>
+</form>
+
+<hr />
+@if (!string.IsNullOrEmpty(error))
+{
+    <div style="color:red">錯誤: @error</div>
+}
+
+@if (record != null)
+{
+    <h2>Id 查詢結果</h2>
+    <pre>@System.Text.Json.JsonSerializer.Serialize(record, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+}
+else if (rows != null)
+{
+    <h2>查詢結果</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                @foreach (var c in rows[0].Keys) { <th>@c</th> }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in rows)
+            {
+                <tr>
+                    @foreach (var kv in r) { <td>@(kv.Value ?? "&lt;null&gt;")</td> }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>請輸入欄位並按查詢，或在 URL 加上 ?id=1 查詢單筆。</p>
+}

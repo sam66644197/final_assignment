@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace midterm_assignment
 {
@@ -17,9 +20,38 @@ namespace midterm_assignment
 
             var app = builder.Build();
 
+            // Middleware: 若請求根目錄或 .html 檔案，從 wwwroot 讀檔並明確以 UTF-8 bytes 回傳（避免編碼亂碼）
+            app.Use(async (ctx, next) =>
+            {
+                var path = ctx.Request.Path.Value ?? "/";
+                if (path == "/" || path.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+                {
+                    var root = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+                    var file = path == "/" ? Path.Combine(root, "index.html") : Path.Combine(root, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(file))
+                    {
+                        var bytes = File.ReadAllBytes(file);
+                        ctx.Response.ContentType = "text/html; charset=utf-8";
+                        await ctx.Response.Body.WriteAsync(bytes, 0, bytes.Length);
+                        return;
+                    }
+                }
+                await next();
+            });
+
             // 啟用靜態檔案服務，預設會從 wwwroot 目錄提供檔案（index.html）
             app.UseDefaultFiles();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
+                    var ct = ctx.Context.Response.ContentType;
+                    if (!string.IsNullOrWhiteSpace(ct) && !ct.Contains("charset", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ctx.Context.Response.ContentType = ct + "; charset=utf-8";
+                    }
+                }
+            });
 
             // 提供一個簡單的狀態端點，不會攔截根目錄的靜態檔案
             app.MapGet("/status", () => Results.Text("AirQuality API running"));
