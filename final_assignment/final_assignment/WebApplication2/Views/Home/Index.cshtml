@@ -4,7 +4,16 @@
     var cols = ViewData["Cols"] as string ?? "";
     var limit = (int)(ViewData["Limit"] ?? 10);
     var rows = ViewData["Rows"] as List<Dictionary<string, object>>;
-    var record = ViewData["Record"];
+    var record = ViewData["Record"] as AirQualityRecord;
+    var idRecords = ViewData["IdRecords"] as List<AirQualityRecord>;
+    var allPage = ViewData["AllRecordsPage"] as List<AirQualityRecord>;
+    var allTotal = (int?)(ViewData["AllRecordsTotal"] as int?) ?? 0;
+    var allPageIndex = (int?)(ViewData["AllRecordsPageIndex"] as int?) ?? 1;
+    var allPageSize = (int?)(ViewData["AllRecordsPageSize"] as int?) ?? 50;
+    var allTotalPages = (int?)(ViewData["AllRecordsTotalPages"] as int?) ?? 1;
+    var parsedIds = ViewData["ParsedIds"] as List<int> ?? new List<int>();
+    var notFoundIds = ViewData["NotFoundIds"] as List<int> ?? new List<int>();
+    var invalidParts = ViewData["InvalidIdParts"] as List<string> ?? new List<string>();
     var error = ViewData["Error"] as string;
 
     var allowed = DatabaseHelper.GetAllowedColumns();
@@ -35,15 +44,72 @@
 </form>
 
 <hr />
+<div>
+    <h3>以 Id 查詢（支援多個 Id，逗號/空白/分號分隔）</h3>
+    <form method="get" asp-controller="Home" asp-action="Index">
+        <label>Id(s)</label>
+        <input name="ids" placeholder="例如 1,2,3" style="width:300px" />
+        <button type="submit">查詢 Id</button>
+    </form>
+</div>
+
+<hr />
 @if (!string.IsNullOrEmpty(error))
 {
     <div style="color:red">錯誤: @error</div>
 }
 
-@if (record != null)
+@if (parsedIds.Count>0 || notFoundIds.Count>0 || invalidParts.Count>0)
+{
+    <div class="alert alert-info">
+        <strong>解析結果</strong>
+        <p>已解析: @string.Join(", ", parsedIds)</p>
+        @if (notFoundIds.Count>0) { <p>找不到的 Id: @string.Join(", ", notFoundIds)</p> }
+        @if (invalidParts.Count>0) { <p>無效輸入: @string.Join(", ", invalidParts)</p> }
+    </div>
+}
+
+@if (idRecords != null && idRecords.Count > 0)
+{
+    <h2>多筆 Id 查詢結果 (@idRecords.Count)</h2>
+    @foreach (var r in idRecords)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">@r.sitename (@r.siteid)</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">縣市</dt><dd class="col-sm-9">@r.county</dd>
+                    <dt class="col-sm-3">AQI</dt><dd class="col-sm-9">@(r.aqi?.ToString() ?? "<null>")</dd>
+                    <dt class="col-sm-3">重要污染物</dt><dd class="col-sm-9">@r.pollutant</dd>
+                    <dt class="col-sm-3">狀態</dt><dd class="col-sm-9">@r.status</dd>
+                    <dt class="col-sm-3">PM2.5</dt><dd class="col-sm-9">@(r.pm2_5?.ToString("F1") ?? "<null>") μg/m3</dd>
+                    <dt class="col-sm-3">PM10</dt><dd class="col-sm-9">@(r.pm10?.ToString("F1") ?? "<null>") μg/m3</dd>
+                    <dt class="col-sm-3">經緯度</dt><dd class="col-sm-9">@r.latitude, @r.longitude</dd>
+                    <dt class="col-sm-3">發布時間</dt><dd class="col-sm-9">@r.publishtime</dd>
+                </dl>
+            </div>
+        </div>
+    }
+}
+else if (record != null)
 {
     <h2>Id 查詢結果</h2>
-    <pre>@System.Text.Json.JsonSerializer.Serialize(record, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+    <table class="table">
+        <tbody>
+            <tr><th>欄位</th><th>值</th></tr>
+            <tr><td>測站</td><td>@(record.sitename ?? "<null>")</td></tr>
+            <tr><td>SiteId</td><td>@(record.siteid ?? "<null>")</td></tr>
+            <tr><td>County</td><td>@(record.county ?? "<null>")</td></tr>
+            <tr><td>AQI</td><td>@(record.aqi?.ToString() ?? "<null>")</td></tr>
+            <tr><td>Pollutant</td><td>@(record.pollutant ?? "<null>")</td></tr>
+            <tr><td>Status</td><td>@(record.status ?? "<null>")</td></tr>
+            <tr><td>PM2.5</td><td>@(record.pm2_5?.ToString("F1") ?? "<null>")</td></tr>
+            <tr><td>PM10</td><td>@(record.pm10?.ToString("F1") ?? "<null>")</td></tr>
+            <tr><td>Longitude</td><td>@(record.longitude ?? "<null>")</td></tr>
+            <tr><td>Latitude</td><td>@(record.latitude ?? "<null>")</td></tr>
+            <tr><td>Publishtime</td><td>@(record.publishtime ?? "<null>")</td></tr>
+        </tbody>
+    </table>
 }
 else if (rows != null)
 {
@@ -64,7 +130,48 @@ else if (rows != null)
         </tbody>
     </table>
 }
-else
+
+@if (allPage != null && allPage.Count > 0)
 {
-    <p>請輸入欄位並按查詢，或在 URL 加上 ?id=1 查詢單筆。</p>
+    <hr />
+    <h2>全部資料 (第 @allPageIndex / @allTotalPages 頁，共 @allTotal 筆)</h2>
+    <table class="table table-bordered table-sm">
+        <thead>
+            <tr>
+                <th>測站</th>
+                <th>SiteId</th>
+                <th>County</th>
+                <th>AQI</th>
+                <th>PM2.5</th>
+                <th>PM10</th>
+                <th>經緯度</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in allPage)
+            {
+                <tr>
+                    <td>@r.sitename</td>
+                    <td>@r.siteid</td>
+                    <td>@r.county</td>
+                    <td>@(r.aqi?.ToString() ?? "<null>")</td>
+                    <td>@(r.pm2_5?.ToString("F1") ?? "<null>")</td>
+                    <td>@(r.pm10?.ToString("F1") ?? "<null>")</td>
+                    <td>@r.latitude, @r.longitude</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(allPageIndex <= 1 ? "disabled" : "")">
+                <a class="page-link" href="?page=@(allPageIndex-1)">上一頁</a>
+            </li>
+            <li class="page-item disabled"><span class="page-link">第 @allPageIndex / @allTotalPages</span></li>
+            <li class="page-item @(allPageIndex >= allTotalPages ? "disabled" : "")">
+                <a class="page-link" href="?page=@(allPageIndex+1)">下一頁</a>
+            </li>
+        </ul>
+    </nav>
 }

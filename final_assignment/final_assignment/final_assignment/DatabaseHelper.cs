@@ -49,6 +49,205 @@ namespace midterm_assignment
             return new ReadOnlyDictionary<string, string>(ColumnMap);
         }
 
+        public static List<AirQualityRecord> GetAllRecords()
+        {
+            var result = new List<AirQualityRecord>();
+            var sql = @"SELECT Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id";
+
+            using var conn = new SqlConnection(DbConnStr);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = sql;
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var r = new AirQualityRecord();
+                int idx;
+
+                idx = reader.GetOrdinal("Sitename");
+                r.sitename = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("County");
+                r.county = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Aqi");
+                r.aqi = reader.IsDBNull(idx) ? (int?)null : reader.GetInt32(idx);
+
+                idx = reader.GetOrdinal("Pollutant");
+                r.pollutant = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Status");
+                r.status = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("So2");
+                r.so2 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Co");
+                r.co = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("O3");
+                r.o3 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("O3_8hr");
+                r.o3_8hr = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM10");
+                r.pm10 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM2_5");
+                r.pm2_5 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("No2");
+                r.no2 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Nox");
+                r.nox = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("No");
+                r.no = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("WindSpeed");
+                r.wind_speed = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("WindDirec");
+                r.wind_direc = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Publishtime");
+                r.publishtime = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Co_8hr");
+                r.co_8hr = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM2_5_Avg");
+                r.pm2_5_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM10_Avg");
+                r.pm10_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("So2_Avg");
+                r.so2_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Longitude");
+                r.longitude = reader.IsDBNull(idx) ? null : Convert.ToDouble(reader.GetValue(idx)).ToString(CultureInfo.InvariantCulture);
+
+                idx = reader.GetOrdinal("Latitude");
+                r.latitude = reader.IsDBNull(idx) ? null : Convert.ToDouble(reader.GetValue(idx)).ToString(CultureInfo.InvariantCulture);
+
+                idx = reader.GetOrdinal("SiteId");
+                r.siteid = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                result.Add(r);
+            }
+
+            return result;
+        }
+
+        public static (List<AirQualityRecord> Records, int Total) GetRecordsPage(int pageIndex, int pageSize)
+        {
+            var records = new List<AirQualityRecord>();
+            var countSql = "SELECT COUNT(*) FROM dbo.AirQualityRecords";
+            var dataSql = @"SELECT Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+            using var conn = new SqlConnection(DbConnStr);
+            conn.Open();
+
+            int total = 0;
+            using (var cntCmd = conn.CreateCommand())
+            {
+                cntCmd.CommandText = countSql;
+                total = Convert.ToInt32(cntCmd.ExecuteScalar());
+            }
+
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = dataSql;
+            cmd.Parameters.AddWithValue("@Offset", pageIndex * pageSize);
+            cmd.Parameters.AddWithValue("@PageSize", pageSize);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var r = new AirQualityRecord();
+                int idx;
+
+                idx = reader.GetOrdinal("Sitename");
+                r.sitename = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("County");
+                r.county = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Aqi");
+                r.aqi = reader.IsDBNull(idx) ? (int?)null : reader.GetInt32(idx);
+
+                idx = reader.GetOrdinal("Pollutant");
+                r.pollutant = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Status");
+                r.status = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("So2");
+                r.so2 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Co");
+                r.co = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("O3");
+                r.o3 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("O3_8hr");
+                r.o3_8hr = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM10");
+                r.pm10 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM2_5");
+                r.pm2_5 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("No2");
+                r.no2 = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Nox");
+                r.nox = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("No");
+                r.no = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("WindSpeed");
+                r.wind_speed = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("WindDirec");
+                r.wind_direc = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Publishtime");
+                r.publishtime = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                idx = reader.GetOrdinal("Co_8hr");
+                r.co_8hr = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM2_5_Avg");
+                r.pm2_5_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("PM10_Avg");
+                r.pm10_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("So2_Avg");
+                r.so2_avg = reader.IsDBNull(idx) ? (double?)null : Convert.ToDouble(reader.GetValue(idx));
+
+                idx = reader.GetOrdinal("Longitude");
+                r.longitude = reader.IsDBNull(idx) ? null : Convert.ToDouble(reader.GetValue(idx)).ToString(CultureInfo.InvariantCulture);
+
+                idx = reader.GetOrdinal("Latitude");
+                r.latitude = reader.IsDBNull(idx) ? null : Convert.ToDouble(reader.GetValue(idx)).ToString(CultureInfo.InvariantCulture);
+
+                idx = reader.GetOrdinal("SiteId");
+                r.siteid = reader.IsDBNull(idx) ? null : reader.GetString(idx);
+
+                records.Add(r);
+            }
+
+            return (records, total);
+        }
+
         public static List<Dictionary<string, object>> GetTopRecordsColumns(string[] requestedColumns, int limit = 10)
         {
             var result = new List<Dictionary<string, object>>();
