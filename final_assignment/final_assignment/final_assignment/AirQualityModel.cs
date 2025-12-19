@@ -1,18 +1,21 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-//目的就是讓 JsonSerializer.Deserialize<AirQualityResponse>
-//能把 JSON 安全、正確地反序列化成強型別物件
+// 用於 JsonSerializer.Deserialize<AirQualityResponse>
+// 將 JSON 反序列化為 AirQualityResponse
 namespace midterm_assignment
 {
     public class AirQualityResponse
     {
         [JsonPropertyName("records")]
         public List<AirQualityRecord> records { get; set; }
-        //多筆空氣品質紀錄
+        // 其他欄位可補充
     }
 
     public class AirQualityRecord
     {
+        // database Id (not present in JSON, assigned when reading from DB)
+        public int? Id { get; set; }
+
         [JsonPropertyName("sitename")]
         public string sitename { get; set; }
 

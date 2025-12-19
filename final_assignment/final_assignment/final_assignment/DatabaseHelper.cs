@@ -52,7 +52,7 @@ namespace midterm_assignment
         public static List<AirQualityRecord> GetAllRecords()
         {
             var result = new List<AirQualityRecord>();
-            var sql = @"SELECT Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id";
+            var sql = @"SELECT Id, Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id";
 
             using var conn = new SqlConnection(DbConnStr);
             conn.Open();
@@ -64,6 +64,9 @@ namespace midterm_assignment
             {
                 var r = new AirQualityRecord();
                 int idx;
+
+                idx = reader.GetOrdinal("Id");
+                r.Id = reader.IsDBNull(idx) ? (int?)null : reader.GetInt32(idx);
 
                 idx = reader.GetOrdinal("Sitename");
                 r.sitename = reader.IsDBNull(idx) ? null : reader.GetString(idx);
@@ -147,7 +150,7 @@ namespace midterm_assignment
         {
             var records = new List<AirQualityRecord>();
             var countSql = "SELECT COUNT(*) FROM dbo.AirQualityRecords";
-            var dataSql = @"SELECT Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            var dataSql = @"SELECT Id, Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId FROM dbo.AirQualityRecords ORDER BY Id OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
             using var conn = new SqlConnection(DbConnStr);
             conn.Open();
@@ -169,6 +172,9 @@ namespace midterm_assignment
             {
                 var r = new AirQualityRecord();
                 int idx;
+
+                idx = reader.GetOrdinal("Id");
+                r.Id = reader.IsDBNull(idx) ? (int?)null : reader.GetInt32(idx);
 
                 idx = reader.GetOrdinal("Sitename");
                 r.sitename = reader.IsDBNull(idx) ? null : reader.GetString(idx);
@@ -294,7 +300,7 @@ namespace midterm_assignment
             using var conn = new SqlConnection(DbConnStr);
             conn.Open();
 
-            var sql = @"SELECT Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId
+            var sql = @"SELECT Id, Sitename, County, Aqi, Pollutant, Status, So2, Co, O3, O3_8hr, PM10, PM2_5, No2, Nox, [No], WindSpeed, WindDirec, Publishtime, Co_8hr, PM2_5_Avg, PM10_Avg, So2_Avg, Longitude, Latitude, SiteId
 FROM dbo.AirQualityRecords WHERE Id = @Id";
 
             using var cmd = conn.CreateCommand();
@@ -307,6 +313,9 @@ FROM dbo.AirQualityRecords WHERE Id = @Id";
 
             var r = new AirQualityRecord();
             int idx;
+
+            idx = reader.GetOrdinal("Id");
+            r.Id = reader.IsDBNull(idx) ? (int?)null : reader.GetInt32(idx);
 
             idx = reader.GetOrdinal("Sitename");
             r.sitename = reader.IsDBNull(idx) ? null : reader.GetString(idx);

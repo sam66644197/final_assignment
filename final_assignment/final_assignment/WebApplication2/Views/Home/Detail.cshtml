@@ -1,0 +1,28 @@
+@model midterm_assignment.AirQualityRecord
+@{
+    ViewData["Title"] = "Record Detail";
+}
+
+<h1>測站詳細資訊</h1>
+
+<table class="table table-bordered">
+    <tbody>
+        <tr><th>Id</th><td>@Model.Id</td></tr>
+        <tr><th>測站</th><td>@(Model.sitename ?? "<null>")</td></tr>
+        <tr><th>SiteId</th><td>@(Model.siteid ?? "<null>")</td></tr>
+        <tr><th>County</th><td>@(Model.county ?? "<null>")</td></tr>
+        <tr><th>AQI</th><td>@(Model.aqi?.ToString() ?? "<null>")</td></tr>
+        <tr><th>Pollutant</th><td>@(Model.pollutant ?? "<null>")</td></tr>
+        <tr><th>Status</th><td>@(Model.status ?? "<null>")</td></tr>
+        <tr><th>PM2.5</th><td>@(Model.pm2_5?.ToString("F1") ?? "<null>")</td></tr>
+        <tr><th>PM10</th><td>@(Model.pm10?.ToString("F1") ?? "<null>")</td></tr>
+        <tr><th>SO2</th><td>@(Model.so2?.ToString() ?? "<null>")</td></tr>
+        <tr><th>CO</th><td>@(Model.co?.ToString() ?? "<null>")</td></tr>
+        <tr><th>O3</th><td>@(Model.o3?.ToString() ?? "<null>")</td></tr>
+        <tr><th>Longitude</th><td>@(Model.longitude ?? "<null>")</td></tr>
+        <tr><th>Latitude</th><td>@(Model.latitude ?? "<null>")</td></tr>
+        <tr><th>Publishtime</th><td>@(Model.publishtime ?? "<null>")</td></tr>
+    </tbody>
+</table>
+
+<a class="btn btn-secondary" href="@Url.Action("Index", "Home")">Back</a>

@@ -14,11 +14,13 @@
     var parsedIds = ViewData["ParsedIds"] as List<int> ?? new List<int>();
     var notFoundIds = ViewData["NotFoundIds"] as List<int> ?? new List<int>();
     var invalidParts = ViewData["InvalidIdParts"] as List<string> ?? new List<string>();
+    var nameResults = ViewData["NameResults"] as List<AirQualityRecord>;
+    var nameSearch = ViewData["NameSearch"] as string;
     var error = ViewData["Error"] as string;
 
     var allowed = DatabaseHelper.GetAllowedColumns();
+    string baseUrl = Context.Request.Path + Context.Request.QueryString;
 }
-
 <h1>AirQuality 查詢</h1>
 
 <div>
@@ -35,21 +37,23 @@
     </details>
 </div>
 
-<form method="get" asp-controller="Home" asp-action="Index">
+<form method="get" asp-controller="Home" asp-action="Index" class="mb-2">
     <label>欄位 (逗號分隔，例如 sitename,aqi,pm2.5)</label>
     <input name="cols" value="@cols" />
     <label>限制筆數</label>
     <input name="limit" value="@limit" />
     <button type="submit">查詢</button>
+    <button type="button" onclick="location.href='@Url.Action("Index", "Home")'">Reset</button>
 </form>
 
 <hr />
 <div>
-    <h3>以 Id 查詢（支援多個 Id，逗號/空白/分號分隔）</h3>
-    <form method="get" asp-controller="Home" asp-action="Index">
-        <label>Id(s)</label>
-        <input name="ids" placeholder="例如 1,2,3" style="width:300px" />
-        <button type="submit">查詢 Id</button>
+    <h3>以測站名稱查詢</h3>
+    <form method="get" asp-controller="Home" asp-action="Index" class="mb-2">
+        <label>測站名稱 (例如 中山)</label>
+        <input name="name" value="@nameSearch" placeholder="輸入測站名稱的一部分" style="width:300px" />
+        <button type="submit">查詢</button>
+        <button type="button" onclick="location.href='@Url.Action("Index", "Home")'">Reset</button>
     </form>
 </div>
 
@@ -69,25 +73,26 @@
     </div>
 }
 
+@if (nameResults != null && nameResults.Count > 0)
+{
+    <h2>名稱查詢結果 (@nameResults.Count)</h2>
+    @foreach (var r in nameResults)
+    {
+        <div class="d-flex align-items-center mb-2">
+            <div class="flex-grow-1">@r.sitename (@r.siteid) — @r.county</div>
+            <div><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Detail", "Home", new { id = r.Id })">Detail</a></div>
+        </div>
+    }
+}
+
 @if (idRecords != null && idRecords.Count > 0)
 {
     <h2>多筆 Id 查詢結果 (@idRecords.Count)</h2>
     @foreach (var r in idRecords)
     {
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">@r.sitename (@r.siteid)</h5>
-                <dl class="row">
-                    <dt class="col-sm-3">縣市</dt><dd class="col-sm-9">@r.county</dd>
-                    <dt class="col-sm-3">AQI</dt><dd class="col-sm-9">@(r.aqi?.ToString() ?? "<null>")</dd>
-                    <dt class="col-sm-3">重要污染物</dt><dd class="col-sm-9">@r.pollutant</dd>
-                    <dt class="col-sm-3">狀態</dt><dd class="col-sm-9">@r.status</dd>
-                    <dt class="col-sm-3">PM2.5</dt><dd class="col-sm-9">@(r.pm2_5?.ToString("F1") ?? "<null>") μg/m3</dd>
-                    <dt class="col-sm-3">PM10</dt><dd class="col-sm-9">@(r.pm10?.ToString("F1") ?? "<null>") μg/m3</dd>
-                    <dt class="col-sm-3">經緯度</dt><dd class="col-sm-9">@r.latitude, @r.longitude</dd>
-                    <dt class="col-sm-3">發布時間</dt><dd class="col-sm-9">@r.publishtime</dd>
-                </dl>
-            </div>
+        <div class="d-flex align-items-center mb-2">
+            <div class="flex-grow-1">@r.sitename (@r.siteid) — @r.county</div>
+            <div><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Detail", "Home", new { id = r.Id })">Detail</a></div>
         </div>
     }
 }
@@ -145,6 +150,7 @@ else if (rows != null)
                 <th>PM2.5</th>
                 <th>PM10</th>
                 <th>經緯度</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -158,6 +164,7 @@ else if (rows != null)
                     <td>@(r.pm2_5?.ToString("F1") ?? "<null>")</td>
                     <td>@(r.pm10?.ToString("F1") ?? "<null>")</td>
                     <td>@r.latitude, @r.longitude</td>
+                    <td><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Detail", "Home", new { id = r.Id })">Detail</a></td>
                 </tr>
             }
         </tbody>

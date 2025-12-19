@@ -16,7 +16,8 @@ namespace WebApplication2.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index(string cols, int? limit, int? id, string ids, int page = 1)
+        // index supports cols/limit, ids (by Id) and name parameter to search by sitename
+        public IActionResult Index(string cols, int? limit, string ids, string name, int page = 1)
         {
             ViewData["Title"] = "Home Page";
             ViewData["Cols"] = cols ?? string.Empty;
@@ -24,7 +25,23 @@ namespace WebApplication2.Controllers
 
             try
             {
-                if (!string.IsNullOrWhiteSpace(ids))
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    // search by sitename (partial match)
+                    // simple approach: load page of records and filter server-side (or create new DB query)
+                    var matches = new List<AirQualityRecord>();
+                    int pageSize = 50; int pageIndex = Math.Max(0, page - 1);
+                    var (records, total) = DatabaseHelper.GetRecordsPage(pageIndex, pageSize);
+                    foreach (var r in records)
+                    {
+                        if (!string.IsNullOrWhiteSpace(r.sitename) && r.sitename.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0)
+                            matches.Add(r);
+                    }
+
+                    ViewData["NameSearch"] = name;
+                    ViewData["NameResults"] = matches;
+                }
+                else if (!string.IsNullOrWhiteSpace(ids))
                 {
                     var idList = new List<AirQualityRecord>();
                     var parsed = new List<int>();
@@ -52,11 +69,6 @@ namespace WebApplication2.Controllers
                     ViewData["NotFoundIds"] = notFound;
                     ViewData["InvalidIdParts"] = notParsed;
                 }
-                else if (id.HasValue && id.Value > 0)
-                {
-                    var record = DatabaseHelper.GetRecordById(id.Value);
-                    ViewData["Record"] = record;
-                }
                 else if (!string.IsNullOrWhiteSpace(cols))
                 {
                     var colsArr = cols.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -65,7 +77,7 @@ namespace WebApplication2.Controllers
                 }
                 else
                 {
-                    // no query provided, load paged records to show on homepage (page is 1-based)
+                    // default: show paged all records
                     const int pageSize = 50;
                     var (records, total) = DatabaseHelper.GetRecordsPage(Math.Max(0, page - 1), pageSize);
                     ViewData["AllRecordsPage"] = records;
@@ -82,6 +94,14 @@ namespace WebApplication2.Controllers
             }
 
             return View();
+        }
+
+        // detail endpoint to return full record by DB id
+        public IActionResult Detail(int id)
+        {
+            var rec = DatabaseHelper.GetRecordById(id);
+            if (rec == null) return NotFound();
+            return View(rec);
         }
 
         public IActionResult Privacy()
