@@ -1,0 +1,68 @@
+@{
+    ViewData["Title"] = "圖表";
+}
+
+<h2>PM2.5 圖表</h2>
+
+<div class="mb-3">
+    <label for="stationSelect" class="form-label">選擇測站</label>
+    <select id="stationSelect" class="form-select"></select>
+</div>
+
+<canvas id="pm25Chart" width="400" height="200"></canvas>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(function () {
+            const $select = $('#stationSelect');
+            const ctx = document.getElementById('pm25Chart').getContext('2d');
+            let chart = null;
+
+            function loadStations() {
+                $.getJSON('/Home/GetStations', function (data) {
+                    $select.empty();
+                    $select.append($('<option/>').text('請選擇測站').attr('value',''));
+                    data.forEach(function (s) {
+                        $select.append($('<option/>').text(s).attr('value', s));
+                    });
+                });
+            }
+
+            function loadData(station) {
+                if (!station) return;
+                $.getJSON('/Home/GetPm25Data', { station: station }, function (res) {
+                    const labels = res.labels || [];
+                    const values = res.values || [];
+
+                    if (chart) chart.destroy();
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: station + ' - PM2.5 (μg/m³)',
+                                data: values,
+                                backgroundColor: ['rgba(54, 162, 235, 0.7)', 'rgba(255, 159, 64, 0.7)'],
+                                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 159, 64, 1)'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+                });
+            }
+
+            $select.on('change', function () {
+                const v = $(this).val();
+                loadData(v);
+            });
+
+            loadStations();
+        });
+    </script>
+}
