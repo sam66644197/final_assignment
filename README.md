@@ -9,19 +9,15 @@
 JSON檔網址:[https://opendataap2.e-land.gov.tw/resource/files/2019-12-05/8d53bf09c4e4a05e122473e1fff2e88e.json](https://data.moenv.gov.tw/api/v2/aqx_p_432?api_key=4c89a32a-a214-461b-bf29-30ff32a61a8a&limit=1000&sort=ImportDate%20desc&format=JSON)
 
 使用方法
-先輸入要分析的JSON檔位置
-  請輸入 JSON 檔案完整路徑或資料夾路徑：
+ 直接執行主程式，就會跳出一個網站
 
-之後就會自動分析，出現以下
-  Root 類型: Array
-  陣列元素數量: 960
-  元素類型分佈:
-  - Object: 960
-  分析物件陣列 (元素數: 960)
-  欄位彙總：
+網站功能
+  查詢系統
+    可以分別以欄位或是以測站名稱查詢，點Detail鍵，能顯示該筆資料更多細節，下方
+    有顯示該資料庫的全部資料。
 
-  --- 嘗試反序列化 ---
-反序列化為 List<ResidentAgeDistribution> 成功，元素數: 960
+  帳號系統
+  完成帳號註冊及登入系統
 ....
 
 建立資料庫
